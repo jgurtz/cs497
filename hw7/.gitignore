@@ -1,0 +1,11 @@
+test*
+
+# Binaries
+ccipher/ccipher
+prof_example/mycat
+
+# Code scanning metadata and reports
+ccipher/ccipher.????/
+ccipher/reports/
+prof_example/mycat.????/
+prof_example/reports/
