@@ -62,6 +62,8 @@ int main(int argc, char** argv) {
     int fd_in;                              // input file descriptor
     int bc_read = 0;                        // Byte read counter
     int char_idx = 0;                       // Index num in CC_TABLE[0]
+    int line_num = 0;                       // Holds current line number for output
+    bool print_line = false;                // keep track if line number needs printing
 
     Opts* opts = handleArgs(argc, argv);    // Parses all cli options until the files
 
@@ -89,12 +91,39 @@ int main(int argc, char** argv) {
                 exit(errno);
             }
 
+            if (opts->nbr == true) {
+                line_num = 1;       // holds the current line number
+                print_line = true;
+            }
+
             while ( (bc_read = read(fd_in, &buf, 1)) > 0 ) {
 
                 switch ( (int)opts->rev ) {
                     case 0: // false
                         char_idx = strcspn(rots->rot_table[0], &buf);   // find index of char in alphabet
-                        (char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[opts->shift_num][char_idx]);
+                        if (char_idx == 52) {
+                            //not an alpha char
+
+                            if (print_line == true) {
+                                printf("%11d: ", line_num); // aligns correctly up to 999,999,999 lines
+                                print_line = false;
+                            }
+
+                            if (buf == '\n' && opts->nbr == true) {
+                                 line_num++;
+                                 print_line = true;
+                            }
+                            printf("%c", buf);
+                        }
+                        else {
+                            // is alpha char
+                            if (print_line == true) {
+                                printf("%11d: ", line_num);
+                                print_line = false;
+                            }
+
+                            printf("%c", rots->rot_table[opts->shift_num][char_idx]);
+                        }
                         break;
                     case 1: // true
                         char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);   // find index of char in alphabet
