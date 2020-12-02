@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS := -O0 -g -Wall -Werror -std=c11
+CFLAGS := -O2 -g -Wall -Werror -std=c11
 
 export CC CFLAGS
 

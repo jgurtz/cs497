@@ -18,7 +18,7 @@ void usage(int ec) {
     printf("    -s NUM  Shift letters NUM times. NUM is from 1 to 13\n\n");
     printf("    -r      Reverse, or decipher.\n\n");
     printf("    -n      Number all output lines.\n\n");
-    printf("    -h -?   Show this help.\n\n");
+    printf("    -h      Show this help.\n\n");
 
     exit(ec);
 }
@@ -29,7 +29,7 @@ Opts* handleArgs(int ac, char** av) {
 
     (ac == 1) ? usage(0) : true;
 
-    while ( (c = getopt(ac, av, "rnh?s:") ) != -1) {
+    while ( (c = getopt(ac, av, "rnhs:") ) != -1) {
         switch(c) {
             case 's':
                 op.shift_num = atoi(optarg);
@@ -40,7 +40,6 @@ Opts* handleArgs(int ac, char** av) {
             case 'n':
                 op.nbr = true;
                 break;
-            case '?':
             case 'h':
             default:
                 usage(0);
@@ -95,25 +94,11 @@ int main(int argc, char** argv) {
                 switch ( (int)opts->rev ) {
                     case 0: // false
                         char_idx = strcspn(rots->rot_table[0], &buf);   // find index of char in alphabet
-
-                        //TODO: make ternary
-                        if (char_idx == 52) {
-                            printf("%c", buf);
-                        }
-                        else {
-                            printf("%c", rots->rot_table[opts->shift_num][char_idx]);
-                        }
+                        (char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[opts->shift_num][char_idx]);
                         break;
                     case 1: // true
                         char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);   // find index of char in alphabet
-
-                        //TODO: make ternary
-                        if (char_idx == 52) {
-                            printf("%c", buf);
-                        }
-                        else {
-                            printf("%c", rots->rot_table[0][char_idx]);
-                        }
+                        (char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[0][char_idx]);
                 }
                 //DEBUG
                 //printf("char_idx: %d\n", char_idx);
