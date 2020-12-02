@@ -1,5 +1,9 @@
+#define _POSIX_C_SOURCE 200809L // silly thing to allow use of dprintf()
+
+#include <getopt.h>             // Not defined by unistd.h for some reason
+
 #include "ccipher.h"
-#include "cc_table.h"
+#include "cc_table.h"           // Custom data type having lookup table
 
 
 void usage(int ec) {
@@ -25,7 +29,7 @@ Opts* handleArgs(int ac, char** av) {
 
     (ac == 1) ? usage(0) : true;
 
-    while ( (c = getopt(ac, av, "rn?hs:") ) != -1) {
+    while ( (c = getopt(ac, av, "rnh?s:") ) != -1) {
         switch(c) {
             case 's':
                 op.shift_num = atoi(optarg);
@@ -51,21 +55,23 @@ Opts* handleArgs(int ac, char** av) {
 }
 
 int main(int argc, char** argv) {
-    Opts* opts = handleArgs(argc, argv);
-    const char *infile;                 // input filename
-    char buf;                           // char buffer
-    int argidx;                         // saves curr. index of argv after getopt()
-    int fd_in;                          // input file descriptor
-    int bc_read = 0;                    // Byte read counter
-    int char_idx = 0;                   // Index num in CC_TABLE[0]
-    //char new_char = '\0';               // Result after processing to be printed
+    //CC_table* rots;
+    CC_table* rots = init_table();          // Generates lookup table on the heap; see cc_table.h
+    const char *infile;                     // input filename
+    char buf;                               // char buffer
+    int argidx;                             // saves curr. index of argv after getopt()
+    int fd_in;                              // input file descriptor
+    int bc_read = 0;                        // Byte read counter
+    int char_idx = 0;                       // Index num in CC_TABLE[0]
+
+    Opts* opts = handleArgs(argc, argv);    // Parses all cli options until the files
 
     //DEBUG
     //printf("After --> SN: %d, RV: %d, NR: %d\n", opts->shift_num, opts->rev, opts->nbr);
     //printf("First letter: %c\n", CC_TABLE[opts->shift_num][ strcspn(CC_TABLE[0], "A") ]);
     //printf("Length of CC_TABLE[0]: %lu\n", strlen(CC_TABLE[0]));
 
-    infile = "-";   // default to reading from stdin
+    //infile = "-";   // default to reading from stdin
     argidx = optind;
 
     do {
@@ -85,16 +91,33 @@ int main(int argc, char** argv) {
             }
 
             while ( (bc_read = read(fd_in, &buf, 1)) > 0 ) {
-                char_idx = strcspn(CC_TABLE[0], &buf);   // find index of char in alphabet
+
+                switch ( (int)opts->rev ) {
+                    case 0: // false
+                        char_idx = strcspn(rots->rot_table[0], &buf);   // find index of char in alphabet
+
+                        //TODO: make ternary
+                        if (char_idx == 52) {
+                            printf("%c", buf);
+                        }
+                        else {
+                            printf("%c", rots->rot_table[opts->shift_num][char_idx]);
+                        }
+                        break;
+                    case 1: // true
+                        char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);   // find index of char in alphabet
+
+                        //TODO: make ternary
+                        if (char_idx == 52) {
+                            printf("%c", buf);
+                        }
+                        else {
+                            printf("%c", rots->rot_table[0][char_idx]);
+                        }
+                }
                 //DEBUG
                 //printf("char_idx: %d\n", char_idx);
 
-                if (char_idx == 52) {
-                    printf("%c", buf);
-                }
-                else {
-                    printf("%c", CC_TABLE[opts->shift_num][char_idx]);
-                }
             }
 
             if (bc_read < 0) {
@@ -108,6 +131,7 @@ int main(int argc, char** argv) {
     }
     while (++argidx < argc);
 
+    free_table(rots);   // deallocate the heap memory
 
     return 0;
 }
