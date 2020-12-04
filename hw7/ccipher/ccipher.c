@@ -1,7 +1,3 @@
-#define _POSIX_C_SOURCE 200809L // silly thing to allow use of dprintf()
-
-#include <getopt.h>             // Not defined by unistd.h for some reason
-
 #include "ccipher.h"
 
 
@@ -14,7 +10,7 @@ void usage(int ec) {
     printf("    Caeser cipher the contents of FILE, then concatenate to stdout.\n\n");
     printf("    If FILE is `-' (a hyphen), operate on stdin. Remaining files ignored.\n\n");
     printf("Options:\n");
-    printf("    -s NUM  Shift letters NUM times. NUM is from 1 to 13\n\n");
+    printf("    -s NUM  Shift letters NUM times. NUM is from 0 to 13\n\n");
     printf("    -r      Reverse, or decipher.\n\n");
     printf("    -n      Number all output lines.\n\n");
     printf("    -h      Show this help.\n\n");
@@ -22,11 +18,11 @@ void usage(int ec) {
     exit(ec);
 }
 
-Opts* handleArgs(int ac, char** av) {
+Opts* handleArgs(int ac, char** av, int* ln, bool* pl) {
     int c;
     static Opts op = {.shift_num=0, .rev=false, .nbr=false};
 
-    (ac == 1) ? usage(0) : true;
+    (ac == 1) ? usage(253) : true;
 
     while ( (c = getopt(ac, av, "rnhs:") ) != -1) {
         switch(c) {
@@ -37,24 +33,52 @@ Opts* handleArgs(int ac, char** av) {
                 op.rev = true;
                 break;
             case 'n':
-                op.nbr = true;
+                op.nbr = true; *ln = 1; *pl = true;
                 break;
             case 'h':
             default:
-                usage(0);
+                usage(255);
         }
     }
 
-    if (op.shift_num < 1 ||
+    if (op.shift_num < 0 ||
         op.shift_num > 13) {
-        usage(255);
+        usage(254);
     }
     return &op;
 }
 
+// Cipher operations are done via this table
+CC_table* init_table() {
+    CC_table* r = malloc(sizeof(*r));
+    r->rot_table = malloc( 14 * sizeof(*r->rot_table) );
+
+    // trailing nulls needed to allow index seaerching with strcspn()
+    r->rot_table[0]  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\0";
+    r->rot_table[1]  = "BCDEFGHIJKLMNOPQRSTUVWXYZAbcdefghijklmnopqrstuvwxyza\0";
+    r->rot_table[2]  = "CDEFGHIJKLMNOPQRSTUVWXYZABcdefghijklmnopqrstuvwxyzab\0";
+    r->rot_table[3]  = "DEFGHIJKLMNOPQRSTUVWXYZABCdefghijklmnopqrstuvwxyzabc\0";
+    r->rot_table[4]  = "EFGHIJKLMNOPQRSTUVWXYZABCDefghijklmnopqrstuvwxyzabcd\0";
+    r->rot_table[5]  = "FGHIJKLMNOPQRSTUVWXYZABCDEfghijklmnopqrstuvwxyzabcde\0";
+    r->rot_table[6]  = "GHIJKLMNOPQRSTUVWXYZABCDEFghijklmnopqrstuvwxyzabcdef\0";
+    r->rot_table[7]  = "HIJKLMNOPQRSTUVWXYZABCDEFGhijklmnopqrstuvwxyzabcdefg\0";
+    r->rot_table[8]  = "IJKLMNOPQRSTUVWXYZABCDEFGHijklmnopqrstuvwxyzabcdefgh\0";
+    r->rot_table[9]  = "JKLMNOPQRSTUVWXYZABCDEFGHIjklmnopqrstuvwxyzabcdefghi\0";
+    r->rot_table[10] = "KLMNOPQRSTUVWXYZABCDEFGHIJklmnopqrstuvwxyzabcdefghij\0";
+    r->rot_table[11] = "LMNOPQRSTUVWXYZABCDEFGHIJKlmnopqrstuvwxyzabcdefghijk\0";
+    r->rot_table[12] = "MNOPQRSTUVWXYZABCDEFGHIJKLmnopqrstuvwxyzabcdefghijkl\0";
+    r->rot_table[13] = "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm\0";
+
+    return r;
+}
+
+void free_table(CC_table* tbl) {
+    free(tbl->rot_table);
+    free(tbl);
+}
+
 int main(int argc, char** argv) {
-    //CC_table* rots;
-    CC_table* rots = init_table();          // Generates lookup table on the heap; see cc_table.h
+    CC_table* rots = init_table();          // Generates lookup table on the heap
     const char *infile;                     // input filename
     char buf;                               // char buffer
     int argidx;                             // saves curr. index of argv after getopt()
@@ -64,72 +88,70 @@ int main(int argc, char** argv) {
     int line_num = 0;                       // Holds current line number for output
     bool print_line = false;                // keep track if line number needs printing
 
-    Opts* opts = handleArgs(argc, argv);    // Parses all cli options until the files
-
+    Opts* opts = handleArgs(argc, argv, &line_num, &print_line);  // Parse all cli options until input files
     argidx = optind;    // idx to remaining argv after processing the flags
+
     do {
         if (argidx < argc) {
             infile = argv[argidx];
 
             if ( 0 == strncmp(infile, "-", strlen(infile)) ) {
                 fd_in = STDIN_FILENO;
+                argidx = argc;  // no more files after reading from stdin
             }
             else {
                 fd_in = open(infile, O_RDONLY);
-            }
-
-            if (fd_in < 0) {
-                perror( strncat("Error opening file", infile, strlen(infile)) );
-                exit(errno);
-            }
-
-            if (opts->nbr == true) {
-                line_num = 1;
-                print_line = true;
+                if (fd_in < 0) {
+                    perror( strncat("Error opening file", infile, strlen(infile)) );
+                    exit(errno);
+                }
             }
 
             while ( (bc_read = read(fd_in, &buf, 1)) > 0 ) {
+                if (bc_read < 0) {
+                    dprintf( STDERR_FILENO, "Error occured reading from file %s: %s\n", infile, strerror(errno) );
+                    close(fd_in);
+                    exit(errno);
+                }
+
+                if (print_line == true) {
+                    printf("%11d: ", line_num); // aligns correctly up to 999,999,999 lines
+                    print_line = false;
+                }
 
                 switch ( (int)opts->rev ) {
                     // char_idx of 52 means char was not found in [A-Za-z]
-                    case 0: // false
-                        char_idx = strcspn(rots->rot_table[0], &buf);   // find index of char in alphabet
+                    case 0: // false, rotate forward
+                        char_idx = strcspn(rots->rot_table[0], &buf);
+
                         if (char_idx == 52) {
-                            //not an alpha char
-
-                            if (print_line == true) {
-                                printf("%11d: ", line_num); // aligns correctly up to 999,999,999 lines
-                                print_line = false;
-                            }
-
+                            // NOT an alpha char
+                            // detect end of line and line numbering feature
                             if (buf == '\n' && opts->nbr == true) {
-                                 line_num++;
-                                 print_line = true;
+                                 line_num++; print_line = true;
                             }
                             printf("%c", buf);
                         }
                         else {
-                            // is alpha char
-                            if (print_line == true) {
-                                printf("%11d: ", line_num);
-                                print_line = false;
-                            }
-
+                            // IS an alpha char
                             printf("%c", rots->rot_table[opts->shift_num][char_idx]);
                         }
                         break;
-                    case 1: // true
-                        char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);   // find index of char in alphabet
-                        (char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[0][char_idx]);
+                    case 1: // true, rotate back
+                        char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);
+                        //(char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[0][char_idx]);
+                        if (char_idx == 52) {
+                            // NOT an alpha char
+                            // detect end of line and line numbering feature
+                            if (buf == '\n' && opts->nbr == true) {
+                                 line_num++; print_line = true;
+                            }
+                            printf("%c", buf);
+                        }
+                        else {
+                            printf("%c", rots->rot_table[0][char_idx]);
+                        }
                 }
-            }
-
-            if (bc_read < 0) {
-                dprintf( STDERR_FILENO, "Error occured reading from file %s: %s\n",
-                    infile, strerror(errno) );
-
-                close(fd_in);
-                exit(errno);
             }
             close(fd_in);
         }

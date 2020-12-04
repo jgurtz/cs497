@@ -1,4 +1,4 @@
-ccipher: ccipher.c ccipher.h cc_table.h
+ccipher: ccipher.c ccipher.h
 	@$(CC) $(CFLAGS) -o ccipher ccipher.c
 
 

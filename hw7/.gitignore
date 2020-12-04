@@ -1,4 +1,6 @@
+# Testing data
 test*
+*.enc
 
 # Binaries
 ccipher/ccipher
