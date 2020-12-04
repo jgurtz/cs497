@@ -28,7 +28,7 @@ Encipher contents of input_file.txt with 5 shifts
 Undo a Caesar’s cipher of 5 shifts from file.txt, redirect the output to a file:
 `ccipher -r -s 5 input_file.txt >> output_file.txt`
 
-Provide a report document to demonstrate your application with screenshots of your results. All screenshots should be nicely resized and annotated. Your document should show what you did, how you did it, display the results, and explain what happened.
+Provide a report document to demonstrate your application with screenshots of your results. All screenshots should be nicely resized and annotated. Your document should show what you did, how you did it, display the results, and explain what happened. Use the `strace` utility to monitor your application and include that output in your report along with some discussion.
 
 ## Deliverables:
 - C source file
