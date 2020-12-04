@@ -4,7 +4,11 @@ prof_example: mycat.c
 clean:
 	@$(RM) -f mycat
 
+reallyclean: clean
+	@$(RM) -f ccipher.????
+	@$(RM) -rf reports
 
-.PHONY = clean
+
+.PHONY = clean reallyclean
 
 # EOF
