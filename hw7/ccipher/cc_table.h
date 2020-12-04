@@ -7,11 +7,7 @@ typedef struct CC_table {
 
 void free_table(CC_table* tbl) {
 
-    /*
-    for (int i=0; i<14; i++) {
-        free(tbl->rot_table[i]);
-    }
-    */
+    free(tbl->rot_table);
     free(tbl);
 }
 
@@ -19,7 +15,7 @@ CC_table* init_table() {
     CC_table* r = malloc(sizeof(*r));
     r->rot_table = malloc( 14 * sizeof(*r->rot_table) );
 
-    // trailing nulls needed so that each line can be searched a a string to find position of char with strcspn()
+    // trailing nulls needed to allow index seaerching with strcspn()
     r->rot_table[0]  = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\0";
     r->rot_table[1]  = "BCDEFGHIJKLMNOPQRSTUVWXYZAbcdefghijklmnopqrstuvwxyza\0";
     r->rot_table[2]  = "CDEFGHIJKLMNOPQRSTUVWXYZABcdefghijklmnopqrstuvwxyzab\0";

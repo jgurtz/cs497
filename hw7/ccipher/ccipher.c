@@ -3,7 +3,6 @@
 #include <getopt.h>             // Not defined by unistd.h for some reason
 
 #include "ccipher.h"
-#include "cc_table.h"           // Custom data type having lookup table
 
 
 void usage(int ec) {
