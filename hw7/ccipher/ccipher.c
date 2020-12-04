@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
             else {
                 fd_in = open(infile, O_RDONLY);
                 if (fd_in < 0) {
-                    perror( strncat("Error opening file", infile, strlen(infile)) );
+                    perror( strcat("Error opening file", infile) );
                     exit(errno);
                 }
             }
