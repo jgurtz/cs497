@@ -67,14 +67,7 @@ int main(int argc, char** argv) {
 
     Opts* opts = handleArgs(argc, argv);    // Parses all cli options until the files
 
-    //DEBUG
-    //printf("After --> SN: %d, RV: %d, NR: %d\n", opts->shift_num, opts->rev, opts->nbr);
-    //printf("First letter: %c\n", CC_TABLE[opts->shift_num][ strcspn(CC_TABLE[0], "A") ]);
-    //printf("Length of CC_TABLE[0]: %lu\n", strlen(CC_TABLE[0]));
-
-    //infile = "-";   // default to reading from stdin
-    argidx = optind;
-
+    argidx = optind;    // idx to remaining argv after processing the flags
     do {
         if (argidx < argc) {
             infile = argv[argidx];
@@ -92,13 +85,14 @@ int main(int argc, char** argv) {
             }
 
             if (opts->nbr == true) {
-                line_num = 1;       // holds the current line number
+                line_num = 1;
                 print_line = true;
             }
 
             while ( (bc_read = read(fd_in, &buf, 1)) > 0 ) {
 
                 switch ( (int)opts->rev ) {
+                    // char_idx of 52 means char was not found in [A-Za-z]
                     case 0: // false
                         char_idx = strcspn(rots->rot_table[0], &buf);   // find index of char in alphabet
                         if (char_idx == 52) {
@@ -129,9 +123,6 @@ int main(int argc, char** argv) {
                         char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);   // find index of char in alphabet
                         (char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[0][char_idx]);
                 }
-                //DEBUG
-                //printf("char_idx: %d\n", char_idx);
-
             }
 
             if (bc_read < 0) {
@@ -141,9 +132,9 @@ int main(int argc, char** argv) {
                 close(fd_in);
                 exit(errno);
             }
+            close(fd_in);
         }
-    }
-    while (++argidx < argc);
+    } while (++argidx < argc);
 
     free_table(rots);   // deallocate the heap memory
 
