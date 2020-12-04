@@ -5,7 +5,7 @@ clean:
 	@$(RM) -f mycat
 
 reallyclean: clean
-	@$(RM) -f ccipher.????
+	@$(RM) -rf ccipher.????
 	@$(RM) -rf reports
 
 

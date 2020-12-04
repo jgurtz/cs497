@@ -9,7 +9,7 @@ clean:
 	@$(RM) -f ccipher
 
 reallyclean: clean
-	@$(RM) -f ccipher.????
+	@$(RM) -rf ccipher.????
 	@$(RM) -rf reports
 
 
