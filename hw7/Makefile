@@ -13,7 +13,6 @@ test: all
 	make -C ccipher test    # memory leak detector and test -s 2
 
 clean:
-	make -C ccipher clean
 	make -C prof_example clean
 
 reallyclean: clean
