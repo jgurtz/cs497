@@ -10,13 +10,13 @@
 #include <getopt.h>             // Not defined by unistd.h for some reason
 
 typedef struct Opts {
-    int shift_num;  			// number of shifts
-    bool rev;      	 			// shift in reverse
-    bool nbr;       			// number the lines of output
+    int shift_num;              // number of shifts
+    bool rev;                   // shift in reverse
+    bool nbr;                   // number the lines of output
 } Opts;
 
 typedef struct CC_table {
-    char** rot_table;			// will be the cipher lookup table
+    char** rot_table;           // will be the cipher lookup table
 } CC_table;
 
 // function prototypes
@@ -24,3 +24,6 @@ void usage();                   // displays program usage
 Opts* handleArgs(int, char**, int*, bool*);  // processes user-supplied option and sets values in Opts struct
 CC_table* init_table();         // allocates and populates the lookup table on the heap
 void free_table(CC_table*);     // wrapper to free the ilookup table dynamic memory allocation
+
+
+// vim: expandtab:smartindent:ts=4:sw=4

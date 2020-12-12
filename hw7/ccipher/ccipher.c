@@ -5,7 +5,7 @@ void usage(int ec) {
     printf("Name:\n");
     printf("    ccipher\n\n");
     printf("Synopsis:\n");
-    printf("    ccipher -s NUM [-r] [-n] [FILE] ...\n\n");
+    printf("    ccipher -s NUM [-r] [-n] FILE ...\n\n");
     printf("Description:\n");
     printf("    Caeser cipher the contents of FILE, then concatenate to stdout.\n\n");
     printf("    If FILE is `-' (a hyphen), operate on stdin. Remaining files ignored.\n\n");
@@ -22,7 +22,7 @@ Opts* handleArgs(int ac, char** av, int* ln, bool* pl) {
     int c;
     static Opts op = {.shift_num=0, .rev=false, .nbr=false};
 
-    (ac == 1) ? usage(253) : true;
+    (ac < 4) ? usage(253) : true;
 
     while ( (c = getopt(ac, av, "rnhs:") ) != -1) {
         switch(c) {
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
             else {
                 fd_in = open(infile, O_RDONLY);
                 if (fd_in < 0) {
-                    perror( strcat("Error opening file", infile) );
+                    perror( strcat("Error opening file: ", infile) );
                     exit(errno);
                 }
             }
