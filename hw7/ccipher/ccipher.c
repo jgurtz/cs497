@@ -120,8 +120,8 @@ int main(int argc, char** argv) {
                 }
 
                 switch ( (int)opts->rev ) {
-                    // char_idx of 52 means char was not found in [A-Za-z]
                     case 0: // false, rotate forward
+                        // char_idx of 52 means char in buf was not found in [A-Za-z]
                         char_idx = strcspn(rots->rot_table[0], &buf);
 
                         if (char_idx == 52) {
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
                         break;
                     case 1: // true, rotate back
                         char_idx = strcspn(rots->rot_table[opts->shift_num], &buf);
-                        //(char_idx == 52) ? printf("%c", buf) : printf("%c", rots->rot_table[0][char_idx]);
+
                         if (char_idx == 52) {
                             // NOT an alpha char
                             // detect end of line and line numbering feature

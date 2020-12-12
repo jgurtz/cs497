@@ -3,7 +3,7 @@
 - Type `make` in the base directory to build the `ccipher` utility and the basic `cat` example in prof_example/
 - If you have clang and have installed the scan-build utility, edit the Makefile in the base directory to enable compilation under that tool. For more information, see https://clang-analyzer.llvm.org/. Additional information on the scan-build utility is at https://clang-analyzer.llvm.org/
 - On linux, you can install `valgrind` and run `make test` to check for memory leaks. Unfortunately, valgrind does not work properly (yet) on MacOS "Catalina" or presumably "Big Sur"
-- You may notice the lookup table is implemented on the heap with dynamic memory allocation. This is not neccesary and was originally on the stack. But there was a weird bug that I thought was some kind of stack corruption and so I put it on the heap. When the bug persisted, I found it was actually an issue with using -O0 as the compiler optimization level. Switching to -O2 fixed it and I decided to leave the heap allocation version ¯\_(ツ)_/¯
+- You may notice the lookup table is implemented on the heap with dynamic memory allocation. This is not neccesary and was originally on the stack. But there was a weird bug that I thought was some kind of stack corruption and so I put it on the heap. When the bug persisted, I found it was actually an issue with using -O0 as the compiler optimization level. Switching to -O2 fixed it and I decided to leave the heap allocation version ¯\\_(ツ)_/¯
 - This is not really useful, but maybe insteresting as an example
 
 
